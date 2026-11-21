@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070A0F" />
+  <title>NeelCards (@neelcards) — Official Telegram Gateway</title>
+  <meta name="description" content="Official Telegram Gateway for NeelCards. Daily credit card reward hacks, LTF offers, lounge tricks, and instant devaluation alerts." />
+  <style>
+    :root {
+      --bg-base: #070A0F;
+      --bg-card: #0E141F;
+      --bg-card-hover: #131B2A;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(36, 161, 222, 0.35);
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --tg-blue: #24A1DE;
+      --tg-blue-dark: #1B86BA;
+      --gold: #F59E0B;
+      --gold-soft: rgba(245, 158, 11, 0.14);
+      --emerald: #10B981;
+      --emerald-soft: rgba(16, 185, 129, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(36, 161, 222, 0.14) 0%, transparent 52%),
+        radial-gradient(circle at 85% 30%, rgba(245, 158, 11, 0.06) 0%, transparent 40%);
+      display: flex;
+      justify-content: center;
+      padding: 16px 14px 40px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Top Status Bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(14, 20, 31, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 11px;
+    }
+
+    .gateway-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--emerald);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .auto-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      font-weight: 500;
+    }
+
+    .switch {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      background: #1E293B;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #94A3B8;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .auto-toggle.active .switch {
+      background: rgba(36, 161, 222, 0.25);
+      border-color: var(--tg-blue);
+    }
+
+    .auto-toggle.active .switch::after {
+      transform: translateX(14px);
+      background: var(--tg-blue);
+    }
+
+    /* Countdown Progress Banner */
+    .countdown-bar {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(36, 161, 222, 0.1);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .countdown-bar.visible {
+      display: flex;
+    }
+
+    .countdown-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #BAE6FD;
+      font-weight: 500;
+    }
+
+    .cancel-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-primary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--tg-blue);
+      transition: width 0.1s linear;
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 24px 18px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 12px;
+    }
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      border: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--gold);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
+    }
+
+    .live-pill {
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--emerald);
+      color: #032218;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 2px solid var(--bg-card);
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .verified-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--tg-blue);
+      flex-shrink: 0;
+    }
+
+    .handle {
+      font-size: 13px;
+      color: var(--tg-blue);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .bio {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      line-height: 1.45;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Primary CTA */
+    .cta-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: linear-gradient(135deg, #2AABEE 0%, #229ED9 100%);
+      color: #FFFFFF;
+      text-decoration: none;
+      font-size: 15.5px;
+      font-weight: 700;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 25px -5px rgba(36, 161, 222, 0.45);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .cta-btn:active {
+      transform: scale(0.985);
+    }
+
+    .cta-btn::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+      animation: shimmer 3.2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      45%, 100% { left: 160%; }
+    }
+
+    .cta-sub {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: -6px;
+    }
+
+    /* Fallback Banner */
+    .fallback-box {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #FDE68A;
+    }
+
+    .fallback-box.visible {
+      display: flex;
+    }
+
+    .copy-mini-btn {
+      background: var(--gold);
+      color: #070A0F;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Section Headers */
+    .section-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 2px 4px 0;
+    }
+
+    /* Benefits List */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    .icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+
+    .icon-gold { background: var(--gold-soft); color: var(--gold); }
+    .icon-blue { background: rgba(36, 161, 222, 0.14); color: var(--tg-blue); }
+    .icon-emerald { background: var(--emerald-soft); color: var(--emerald); }
+
+    .benefit-text h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .benefit-text p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Recent Drops Preview */
+    .drop-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .drop-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .drop-tag {
+      background: var(--gold-soft);
+      color: var(--gold);
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    .drop-time {
+      color: var(--text-muted);
+    }
+
+    .drop-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Secondary Action Row */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .sec-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 11px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .sec-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <!-- Top Gateway Bar -->
+    <div class="status-bar">
+      <div class="gateway-badge">
+        <span class="pulse-dot"></span>
+        <span>VERIFIED GATEWAY • HTTPS</span>
+      </div>
+      <div class="auto-toggle" id="autoToggle" role="switch" aria-checked="false" tabindex="0">
+        <span>Auto-Open (5s)</span>
+        <span class="switch"></span>
+      </div>
+    </div>
+
+    <!-- Auto-Redirect Progress Bar -->
+    <div class="countdown-bar" id="countdownBar">
+      <div class="countdown-top">
+        <span id="countdownText">Opening @neelcards in 5.0s...</span>
+        <button type="button" class="cancel-btn" id="cancelAutoBtn">Cancel</button>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Profile Header Card -->
+    <section class="profile-card">
+      <div class="avatar-wrap">
+        <div class="avatar">NC</div>
+        <span class="live-pill">LIVE</span>
+      </div>
+      <div class="title-row">
+        <h1>NeelCards</h1>
+        <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor" aria-label="Verified">
+          <path d="M12 2L14.8 4.2L18.3 3.9L19.6 7.2L22.6 9.1L21.8 12.6L23.5 15.7L20.8 18L20.5 21.5L17 21.8L14.7 24.5L11.6 22.8L8.1 23.6L6.2 20.6L2.9 19.3L3.2 15.8L1 13L3.2 10.2L2.9 6.7L6.2 5.4L8.1 2.4L11.6 3.2L12 2ZM10.4 16.2L17.2 9.4L15.8 8L10.4 13.4L8.2 11.2L6.8 12.6L10.4 16.2Z"/>
+        </svg>
+      </div>
+      <div class="handle">@neelcards</div>
+      <p class="bio">India's sharpest credit card community. Daily reward multipliers, LTF card alerts, lounge hacks &amp; instant devaluation warnings.</p>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <span class="stat-val">48.9K+</span>
+          <span class="stat-lbl">Members</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val">Daily</span>
+          <span class="stat-lbl">Card Alerts</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val">100%</span>
+          <span class="stat-lbl">Free Access</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primary Telegram CTA -->
+    <a href="https://t.me/neelcards" class="cta-btn" id="joinCta">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+      </svg>
+      <span>Open in Telegram App</span>
+    </a>
+    <div class="cta-sub">Direct redirect to t.me/neelcards • No spam, ever</div>
+
+    <!-- Fallback Link Banner -->
+    <div class="fallback-box" id="fallbackBox">
+      <span>Telegram didn't open automatically? Copy the invite link:</span>
+      <button type="button" class="copy-mini-btn" id="fallbackCopyBtn">Copy Link</button>
+    </div>
+
+    <!-- Value Highlights -->
+    <div class="section-title">What You Get Inside</div>
+    <div class="card-list">
+      <div class="benefit-item">
+        <div class="icon-box icon-gold">⚡</div>
+        <div class="benefit-text">
+          <h3>LTF &amp; Pre-Approved Windows</h3>
+          <p>Instant alerts when HDFC, ICICI, Axis &amp; SBI open Lifetime Free offers.</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="icon-box icon-blue">💎</div>
+        <div class="benefit-text">
+          <h3>5X–10X Reward Stacking</h3>
+          <p>Gyftr voucher routes, SmartBuy caps &amp; transfer partner bonuses.</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="icon-box icon-emerald">🛡️</div>
+        <div class="benefit-text">
+          <h3>Devaluation &amp; MCC Alerts</h3>
+          <p>Know before banks cut lounge access, rent rewards, or milestone perks.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Channel Drops -->
+    <div class="section-title">Recent Channel Alerts</div>
+    <div class="card-list">
+      <div class="drop-item">
+        <div class="drop-meta">
+          <span class="drop-tag">REWARD HACK</span>
+          <span class="drop-time">Today</span>
+        </div>
+        <div class="drop-title">HDFC Infinia &amp; Diners Black: Monthly SmartBuy &amp; Gyftr cap checklist</div>
+      </div>
+      <div class="drop-item">
+        <div class="drop-meta">
+          <span class="drop-tag">MILES TRANSFER</span>
+          <span class="drop-time">Yesterday</span>
+        </div>
+        <div class="drop-title">Axis Atlas Edge Miles: Best Accor &amp; airline conversion sweet spots</div>
+      </div>
+    </div>
+
+    <!-- Quick Utility Buttons -->
+    <div class="action-row">
+      <button type="button" class="sec-btn" id="copyLinkBtn">📋 Copy Channel Link</button>
+      <a href="https://t.me/neelcards" target="_blank" rel="noopener noreferrer" class="sec-btn">🌐 Open in Web</a>
+    </div>
+
+    <footer>
+      NeelCards Official Redirect Gateway • Educational &amp; informational community.<br />
+      Never share OTPs, CVV, or card PINs with anyone on Telegram.
+    </footer>
+  </main>
+
+  <script>
+    const TELEGRAM_HANDLE = "neelcards";
+    const TELEGRAM_URL = `https://t.me/${TELEGRAM_HANDLE}`;
+    const TELEGRAM_APP_URI = `tg://resolve?domain=${TELEGRAM_HANDLE}`;
+
+    const joinCta = document.getElementById("joinCta");
+    const fallbackBox = document.getElementById("fallbackBox");
+    const fallbackCopyBtn = document.getElementById("fallbackCopyBtn");
+    const copyLinkBtn = document.getElementById("copyLinkBtn");
+    const autoToggle = document.getElementById("autoToggle");
+    const countdownBar = document.getElementById("countdownBar");
+    const countdownText = document.getElementById("countdownText");
+    const progressFill = document.getElementById("progressFill");
+    const cancelAutoBtn = document.getElementById("cancelAutoBtn");
+
+    let autoTimer = null;
+    let remainingMs = 5000;
+
+    function openTelegram(e) {
+      if (e) e.preventDefault();
+      fallbackBox.classList.add("visible");
+
+      // Attempt native app deep-link first, then fallback to HTTPS URL
+      window.location.href = TELEGRAM_APP_URI;
+      setTimeout(() => {
+        window.location.href = TELEGRAM_URL;
+      }, 600);
+    }
+
+    async function copyInviteLink(btnElement, defaultLabel) {
+      try {
+        await navigator.clipboard.writeText(TELEGRAM_URL);
+        btnElement.textContent = "✓ Copied!";
+        setTimeout(() => {
+          btnElement.textContent = defaultLabel;
+        }, 2000);
+      } catch {
+        prompt("Copy the NeelCards Telegram link:", TELEGRAM_URL);
+      }
+    }
+
+    function stopAutoRedirect() {
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+      }
+      autoToggle.classList.remove("active");
+      autoToggle.setAttribute("aria-checked", "false");
+      countdownBar.classList.remove("visible");
+      remainingMs = 5000;
+      progressFill.style.width = "100%";
+    }
+
+    function startAutoRedirect() {
+      stopAutoRedirect();
+      autoToggle.classList.add("active");
+      autoToggle.setAttribute("aria-checked", "true");
+      countdownBar.classList.add("visible");
+      remainingMs = 5000;
+
+      autoTimer = setInterval(() => {
+        remainingMs -= 100;
+        const seconds = Math.max(0, remainingMs / 1000).toFixed(1);
+        countdownText.textContent = `Opening @${TELEGRAM_HANDLE} in ${seconds}s...`;
+        progressFill.style.width = `${(remainingMs / 5000) * 100}%`;
+
+        if (remainingMs <= 0) {
+          stopAutoRedirect();
+          openTelegram();
+        }
+      }, 100);
+    }
+
+    joinCta.addEventListener("click", openTelegram);
+    copyLinkBtn.addEventListener("click", () => copyInviteLink(copyLinkBtn, "📋 Copy Channel Link"));
+    fallbackCopyBtn.addEventListener("click", () => copyInviteLink(fallbackCopyBtn, "Copy Link"));
+    cancelAutoBtn.addEventListener("click", stopAutoRedirect);
+
+    autoToggle.addEventListener("click", () => {
+      if (autoTimer) {
+        stopAutoRedirect();
+      } else {
+        startAutoRedirect();
+      }
+    });
+
+    autoToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        autoToggle.click();
+      }
+    });
+  </script>
+</body>
+</html>
